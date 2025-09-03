@@ -47,6 +47,36 @@ export class DatabaseConfig {
    * Get MongoDB configuration
    */
   getMongoDBConfig(): IMongoDBConfig {
+    // Check if connection string is provided
+    const connectionString = this.configService.get<string>('MONGO_CONNECTION_STRING');
+    
+    if (connectionString) {
+      // Use connection string if provided
+      return {
+        type: DatabaseType.MONGODB,
+        connectionString,
+        host: 'localhost', // Default values for interface compliance
+        port: 27017,
+        database: 'job_portal',
+        ssl: this.configService.get<boolean>('MONGO_SSL', false),
+        maxPoolSize: this.configService.get<number>('MONGO_MAX_POOL_SIZE', 10),
+        minPoolSize: this.configService.get<number>('MONGO_MIN_POOL_SIZE', 2),
+        maxIdleTimeMS: this.configService.get<number>('MONGO_MAX_IDLE_TIME_MS', 30000),
+        serverSelectionTimeoutMS: this.configService.get<number>('MONGO_SERVER_SELECTION_TIMEOUT_MS', 5000),
+        socketTimeoutMS: this.configService.get<number>('MONGO_SOCKET_TIMEOUT_MS', 45000),
+        connectTimeoutMS: this.configService.get<number>('MONGO_CONNECT_TIMEOUT_MS', 10000),
+        connectionTimeout: this.configService.get<number>('MONGO_CONNECTION_TIMEOUT', 30000),
+        acquireTimeout: this.configService.get<number>('MONGO_ACQUIRE_TIMEOUT', 60000),
+        timeout: this.configService.get<number>('MONGO_TIMEOUT', 30000),
+        pool: {
+          min: this.configService.get<number>('MONGO_POOL_MIN', 2),
+          max: this.configService.get<number>('MONGO_POOL_MAX', 10),
+          idle: this.configService.get<number>('MONGO_POOL_IDLE', 10000),
+        },
+      };
+    }
+
+    // Fallback to individual parameters
     return {
       type: DatabaseType.MONGODB,
       host: this.configService.get<string>('MONGO_HOST', 'localhost'),

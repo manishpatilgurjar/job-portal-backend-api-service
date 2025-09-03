@@ -25,7 +25,8 @@
     "db:seed:make": "knex seed:make",
     "db:migrate:make": "knex migrate:make",
     "db:reset": "knex migrate:rollback --all && knex migrate:latest && knex seed:run",
-    "db:setup": "npm run db:migrate && npm run db:seed"
+    "db:setup": "npm run db:migrate && npm run db:seed",
+    "db:test": "ts-node src/database/test-connection.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -33,8 +34,10 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/mongoose": "^11.0.3",
     "@nestjs/platform-express": "^11.0.1",
+    "knex": "^3.1.0",
     "mongodb": "^6.19.0",
     "mongoose": "^8.18.0",
+    "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },

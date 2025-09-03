@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import * as Knex from 'knex';
+import knex, { Knex } from 'knex';
 import { BaseDatabaseConnection } from './base-connection.abstract';
-import { IPostgreSQLConfig } from '../interfaces/database-config.interface';
+import type { IPostgreSQLConfig } from '../interfaces/database-config.interface';
 import { DatabaseType, ConnectionStatus } from '../enums/database-type.enum';
 import { 
   DatabaseConnectionException,
@@ -14,7 +14,7 @@ import {
  */
 @Injectable()
 export class PostgreSQLConnection extends BaseDatabaseConnection {
-  private knex: Knex.Knex;
+  private knex: Knex;
 
   constructor(id: string, config: IPostgreSQLConfig) {
     super(id, DatabaseType.POSTGRESQL, config);
@@ -26,6 +26,7 @@ export class PostgreSQLConnection extends BaseDatabaseConnection {
   async connect(): Promise<void> {
     try {
       this.setStatus(ConnectionStatus.CONNECTING);
+      console.log(`   📡 Connecting to PostgreSQL at ${this.config.host}:${this.config.port}/${this.config.database}...`);
 
       const knexConfig: Knex.Config = {
         client: 'pg',
@@ -35,16 +36,7 @@ export class PostgreSQLConnection extends BaseDatabaseConnection {
           database: this.config.database,
           user: this.config.username,
           password: this.config.password,
-          ssl: this.config.ssl ? { rejectUnauthorized: false } : false,
-          application_name: this.config.applicationName,
         },
-        pool: {
-          min: this.config.pool?.min || 2,
-          max: this.config.pool?.max || 20,
-          idleTimeoutMillis: this.config.idleTimeoutMillis || 30000,
-          acquireTimeoutMillis: this.config.acquireTimeout || 60000,
-        },
-        acquireConnectionTimeout: this.config.connectionTimeout || 30000,
         migrations: {
           directory: './src/database/migrations',
           tableName: 'knex_migrations',
@@ -52,18 +44,19 @@ export class PostgreSQLConnection extends BaseDatabaseConnection {
         seeds: {
           directory: './src/database/seeds',
         },
-        debug: process.env.NODE_ENV === 'development',
       };
 
-      this.knex = Knex(knexConfig);
+      this.knex = knex(knexConfig);
 
       // Test the connection
       await this.knex.raw('SELECT 1');
       
       this._connection = this.knex;
       this.setStatus(ConnectionStatus.CONNECTED);
+      console.log(`   ✅ PostgreSQL connected successfully!`);
 
     } catch (error) {
+      console.error(`   ❌ PostgreSQL connection failed: ${error.message}`);
       this.handleConnectionError(error);
     }
   }
@@ -75,7 +68,7 @@ export class PostgreSQLConnection extends BaseDatabaseConnection {
     try {
       if (this.knex) {
         await this.knex.destroy();
-        this.knex = null;
+        this.knex = undefined as any;
         this._connection = null;
         this.setStatus(ConnectionStatus.DISCONNECTED);
       }
@@ -87,7 +80,7 @@ export class PostgreSQLConnection extends BaseDatabaseConnection {
   /**
    * Get Knex instance
    */
-  getConnection(): Knex.Knex {
+  getConnection(): Knex {
     if (!this.isConnected()) {
       throw new DatabaseConnectionException('Connection not established');
     }
@@ -97,31 +90,39 @@ export class PostgreSQLConnection extends BaseDatabaseConnection {
   /**
    * Execute raw SQL query
    */
-  async executeQuery(query: string, params?: any[]): Promise<any> {
+  async executeQuery(query: string | object, params?: any[]): Promise<any> {
     try {
       if (!this.isConnected()) {
         throw new DatabaseConnectionException('Connection not established');
       }
 
-      const result = await this.knex.raw(query, params);
+      // PostgreSQL only supports string queries
+      if (typeof query !== 'string') {
+        throw new DatabaseQueryException('PostgreSQL only supports string queries');
+      }
+
+      const result = await this.knex.raw(query, params || []);
       return result.rows || result;
     } catch (error) {
-      this.handleQueryError(error, query, params);
+      this.handleQueryError(error, query as string, params);
     }
   }
 
   /**
    * Begin database transaction
    */
-  async beginTransaction(): Promise<Knex.Transaction> {
+  async beginTransaction(): Promise<any> {
     try {
       if (!this.isConnected()) {
         throw new DatabaseConnectionException('Connection not established');
       }
 
-      const transaction = await this.knex.transaction();
-      this._transaction = transaction;
-      return transaction;
+      return new Promise((resolve, reject) => {
+        this.knex.transaction((trx) => {
+          this._transaction = trx;
+          resolve(trx);
+        }).catch(reject);
+      });
     } catch (error) {
       this.handleTransactionError(error, 'begin');
     }
@@ -130,7 +131,7 @@ export class PostgreSQLConnection extends BaseDatabaseConnection {
   /**
    * Commit transaction
    */
-  async commitTransaction(transaction: Knex.Transaction): Promise<void> {
+  async commitTransaction(transaction: any): Promise<void> {
     try {
       if (!transaction) {
         throw new DatabaseTransactionException('Transaction not provided');
@@ -146,7 +147,7 @@ export class PostgreSQLConnection extends BaseDatabaseConnection {
   /**
    * Rollback transaction
    */
-  async rollbackTransaction(transaction: Knex.Transaction): Promise<void> {
+  async rollbackTransaction(transaction: any): Promise<void> {
     try {
       if (!transaction) {
         throw new DatabaseTransactionException('Transaction not provided');
@@ -162,7 +163,7 @@ export class PostgreSQLConnection extends BaseDatabaseConnection {
   /**
    * Get Knex query builder for a table
    */
-  table(tableName: string): Knex.QueryBuilder {
+  table(tableName: string): any {
     if (!this.isConnected()) {
       throw new DatabaseConnectionException('Connection not established');
     }
@@ -172,7 +173,7 @@ export class PostgreSQLConnection extends BaseDatabaseConnection {
   /**
    * Get Knex schema builder
    */
-  schema(): Knex.SchemaBuilder {
+  schema(): any {
     if (!this.isConnected()) {
       throw new DatabaseConnectionException('Connection not established');
     }

@@ -39,6 +39,7 @@ export interface IPostgreSQLConfig extends IDatabaseConfig {
  */
 export interface IMongoDBConfig extends IDatabaseConfig {
   readonly type: DatabaseType.MONGODB;
+  readonly connectionString?: string; // MongoDB connection string
   readonly authSource?: string;
   readonly authMechanism?: string;
   readonly replicaSet?: string;

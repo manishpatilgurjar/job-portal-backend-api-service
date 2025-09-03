@@ -27,9 +27,13 @@ export class MongoDBConnection extends BaseDatabaseConnection {
   async connect(): Promise<void> {
     try {
       this.setStatus(ConnectionStatus.CONNECTING);
-
+      
       const connectionString = this.buildConnectionString();
       const mongoConfig = this.config as IMongoDBConfig;
+      
+      // Log connection details (hide credentials)
+      const displayString = connectionString.replace(/\/\/.*@/, '//***:***@');
+      console.log(`   📡 Connecting to MongoDB: ${displayString}`);
       
       const options = {
         maxPoolSize: mongoConfig.maxPoolSize || 10,
@@ -51,8 +55,12 @@ export class MongoDBConnection extends BaseDatabaseConnection {
       this.connection = this.mongoose.connection;
       this._connection = this.connection;
       this.setStatus(ConnectionStatus.CONNECTED);
+      
+      console.log(`   ✅ MongoDB connected successfully!`);
+      console.log(`   📊 Database: ${this.connection.db?.databaseName || 'Unknown'}`);
 
     } catch (error) {
+      console.error(`   ❌ MongoDB connection failed: ${error.message}`);
       this.handleConnectionError(error);
     }
   }
@@ -257,6 +265,14 @@ export class MongoDBConnection extends BaseDatabaseConnection {
    * Build MongoDB connection string
    */
   private buildConnectionString(): string {
+    const mongoConfig = this.config as IMongoDBConfig;
+    
+    // Use provided connection string if available
+    if (mongoConfig.connectionString) {
+      return mongoConfig.connectionString;
+    }
+    
+    // Build connection string from individual parameters
     const { host, port, database, username, password, ssl } = this.config;
     
     let connectionString = 'mongodb://';

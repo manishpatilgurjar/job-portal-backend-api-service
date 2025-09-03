@@ -66,7 +66,7 @@ export abstract class BaseDatabaseConnection implements IDatabaseConnection {
    * Abstract method to execute query
    * Must be implemented by concrete connection classes
    */
-  abstract executeQuery(query: string, params?: any[]): Promise<any>;
+  abstract executeQuery(query: string | object, params?: any[]): Promise<any>;
 
   /**
    * Abstract method to begin transaction
