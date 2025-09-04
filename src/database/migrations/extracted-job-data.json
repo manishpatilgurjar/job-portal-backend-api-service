@@ -1,0 +1,38 @@
+{
+  "hrRecords": [
+    {
+      "sno": 1,
+      "name": "Akanksha Puri",
+      "email": "akanksha.puri@sourcefuse.com",
+      "title": "Associate Director HR",
+      "company": "SourceFuse Technologies"
+    },
+    {
+      "sno": 2,
+      "name": "Akanksha Sogani",
+      "email": "akanksha.sogani@perennialsys.com",
+      "title": "Head HR",
+      "company": "Perennial Systems"
+    },
+    {
+      "sno": 3,
+      "name": "Akhil Jogiparthi",
+      "email": "akhil@ibhubs.co",
+      "title": "Vice President - Talent Accelerator",
+      "company": "iB Hubs"
+    }
+  ],
+  "personalInfo": {
+    "fullName": "",
+    "email": "",
+    "phone": "",
+    "location": "",
+    "linkedin": "",
+    "portfolio": ""
+  },
+  "experience": [],
+  "education": [],
+  "skills": [],
+  "certifications": [],
+  "projects": []
+}

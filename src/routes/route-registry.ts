@@ -1,6 +1,7 @@
 import { ModuleRouteConfig } from './interfaces/route.interface';
 import { authRoutesConfig } from './auth.routes';
 import { userRoutesConfig } from './user.routes';
+import { hrExtractionRoutesConfig } from '../hr-extraction/routes/hr-extraction.routes';
 
 /**
  * Centralized route registry
@@ -75,6 +76,7 @@ export class RouteRegistry {
 // Register all module routes
 RouteRegistry.register('auth', authRoutesConfig);
 RouteRegistry.register('user', userRoutesConfig);
+RouteRegistry.register('hr-extraction', hrExtractionRoutesConfig);
 
 // Export for easy access
 export { RouteRegistry as default };

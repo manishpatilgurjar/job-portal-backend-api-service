@@ -122,7 +122,7 @@ export class DatabaseManager implements IDatabaseManager, OnModuleInit, OnModule
   async disconnectAll(): Promise<void> {
     const disconnectPromises = Array.from(this.connections.values()).map(
       connection => connection.disconnect().catch(error => {
-        console.error(`Failed to disconnect connection: ${error.message}`);
+
       })
     );
 

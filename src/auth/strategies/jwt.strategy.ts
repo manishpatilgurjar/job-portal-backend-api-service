@@ -10,40 +10,44 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private configService: ConfigService,
     private databaseManager: DatabaseManager,
   ) {
+    const jwtSecret = 'default-secret';
+    console.log('🔐 [JWT-STRATEGY] Initializing with hardcoded JWT secret: default-secret');
+    console.log('🔐 [JWT-STRATEGY] JWT secret length:', jwtSecret.length);
+    
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'default-secret',
+      secretOrKey: 'default-secret',
     });
   }
 
   async validate(payload: any) {
     try {
-      // Get user from database
-      const postgresConnection = this.databaseManager.getPostgreSQLConnection();
-      const result = await postgresConnection.executeQuery(
-        'SELECT id, email, first_name, last_name, user_type, is_active, account_status FROM users WHERE id = $1',
-        [payload.sub]
-      );
+      // Get user from database using Knex query builder (same as auth model)
+      const postgresConnection = this.databaseManager.getPostgreSQLConnection('postgresql');
+      const knex = postgresConnection.getConnection();
+      
+      const result = await knex('users')
+        .select('id', 'email', 'first_name', 'last_name', 'user_type', 'is_active', 'account_status')
+        .where('id', payload.sub)
+        .first();
 
-      if (!result || result.length === 0) {
+      if (!result) {
         throw new UnauthorizedException('User not found');
       }
 
-      const user = result[0];
-
-      if (!user.is_active || user.account_status !== 'active') {
+      if (!result.is_active || result.account_status !== 'active') {
         throw new UnauthorizedException('User account is not active');
       }
 
       return {
-        id: user.id,
-        email: user.email,
-        firstName: user.first_name,
-        lastName: user.last_name,
-        userType: user.user_type,
-        isActive: user.is_active,
-        accountStatus: user.account_status,
+        id: result.id,
+        email: result.email,
+        firstName: result.first_name,
+        lastName: result.last_name,
+        userType: result.user_type,
+        isActive: result.is_active,
+        accountStatus: result.account_status,
       };
     } catch (error) {
       throw new UnauthorizedException('Invalid token');

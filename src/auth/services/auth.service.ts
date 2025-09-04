@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { AuthModel } from '../models/auth.model';
 import * as bcrypt from 'bcryptjs';
 import { SignupDto, LoginDto, PhoneLoginDto, GoogleAuthDto, ForgotPasswordDto, ResetPasswordDto } from '../dto/auth.dto';
+import { winstonConfig } from '../../common/logger/winston.config';
 
 @Injectable()
 export class AuthService {
@@ -178,7 +179,7 @@ export class AuthService {
     });
 
     // TODO: Send OTP via SMS service (Twilio, etc.)
-    console.log(`OTP for ${phone}: ${otp}`); // For development only
+    winstonConfig.log(`OTP for ${phone}: ${otp}`, 'AuthService'); // For development only
 
     return { message: `OTP sent successfully to ${phone}` };
   }
@@ -325,7 +326,7 @@ export class AuthService {
     });
 
     // TODO: Send reset email
-    console.log(`Password reset token for ${email}: ${resetToken}`); // For development only
+    winstonConfig.log(`Password reset token for ${email}: ${resetToken}`, 'AuthService'); // For development only
 
     return { message: 'Password reset email sent successfully' };
   }
@@ -393,14 +394,17 @@ export class AuthService {
   private async generateTokens(userId: string) {
     const payload = { sub: userId };
     
+    const jwtSecret = 'default-secret';
+    const jwtRefreshSecret = 'default-refresh-secret';
+    
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: '15m',
-      secret: this.configService.get<string>('JWT_SECRET'),
+      secret: jwtSecret,
     });
 
     const refreshToken = this.jwtService.sign(payload, {
       expiresIn: '7d',
-      secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      secret: jwtRefreshSecret,
     });
 
     // Store refresh token in database

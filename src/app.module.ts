@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { RoutesModule } from './routes';
+import { HrExtractionModule } from './hr-extraction/hr-extraction.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { RoutesModule } from './routes';
     }),
     DatabaseModule,
     RoutesModule, // Use centralized routes module
+    HrExtractionModule, // HR data extraction module
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -163,7 +163,7 @@ export class AuthModel implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     // Get Knex instance from PostgreSQL connection after module initialization
-    const postgresConnection = this.databaseManager.getPostgreSQLConnection();
+    const postgresConnection = this.databaseManager.getPostgreSQLConnection('postgresql');
     this.knex = postgresConnection.getConnection();
   }
 

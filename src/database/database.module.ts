@@ -2,6 +2,9 @@ import { Module, Global } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseManager } from './managers/database-manager';
 import { DatabaseConfig } from './config/database.config';
+import { MongoDBService } from './services/mongodb.service';
+import { UserHrDataService } from './services/user-hr-data.service';
+import { winstonConfig } from '../common/logger/winston.config';
 
 /**
  * Global database module
@@ -13,32 +16,34 @@ import { DatabaseConfig } from './config/database.config';
   providers: [
     DatabaseConfig,
     DatabaseManager,
+    MongoDBService,
+    UserHrDataService,
     {
       provide: 'DATABASE_INITIALIZER',
       useFactory: async (databaseManager: DatabaseManager, databaseConfig: DatabaseConfig) => {
-        console.log('🚀 Initializing Database Connections...');
-        console.log('=====================================');
+        winstonConfig.log('🚀 Initializing Database Connections...', 'Database');
+        winstonConfig.log('=====================================', 'Database');
 
         try {
           // Initialize PostgreSQL connection
-          console.log('🐘 Connecting to PostgreSQL...');
+          winstonConfig.log('🐘 Connecting to PostgreSQL...', 'Database');
           const postgresConfig = databaseConfig.getPostgreSQLConfig();
           await databaseManager.addConnection('postgresql', postgresConfig);
-          console.log('✅ PostgreSQL connection established successfully!');
+          winstonConfig.log('✅ PostgreSQL connection established successfully!', 'Database');
 
           // Initialize MongoDB connection
-          console.log('🍃 Connecting to MongoDB...');
+          winstonConfig.log('🍃 Connecting to MongoDB...', 'Database');
           const mongoConfig = databaseConfig.getMongoDBConfig();
           await databaseManager.addConnection('mongodb', mongoConfig);
-          console.log('✅ MongoDB connection established successfully!');
+          winstonConfig.log('✅ MongoDB connection established successfully!', 'Database');
 
-          console.log('=====================================');
-          console.log('🎉 All database connections are ready!');
-          console.log('=====================================');
+          winstonConfig.log('=====================================', 'Database');
+          winstonConfig.log('🎉 All database connections are ready!', 'Database');
+          winstonConfig.log('=====================================', 'Database');
 
           return databaseManager;
         } catch (error) {
-          console.error('❌ Database initialization failed:', error.message);
+          winstonConfig.error('❌ Database initialization failed:', error.message, 'Database');
           throw error;
         }
       },
@@ -48,6 +53,8 @@ import { DatabaseConfig } from './config/database.config';
   exports: [
     DatabaseManager,
     DatabaseConfig,
+    MongoDBService,
+    UserHrDataService,
     'DATABASE_INITIALIZER',
   ],
 })
